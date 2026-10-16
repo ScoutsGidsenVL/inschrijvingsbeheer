@@ -37,3 +37,4 @@ Deze views maken voor het merendeel gebruik van templates gevonden in [templates
 - Alle pagina's vragen aanmelding, ook `/docs` en `/handleidingen`. Enkel `/geen-toegang`, `/oidc` en de statische bestanden zijn publiek.
 - Wie geen personeel is, wordt niet bewaard in de databank.
 - Meld je af bij Keycloak, dan laadt Keycloak `/oidc/frontchannel-logout/` in een verborgen iframe en word je ook hier afgemeld. Daarnaast controleert `SessionRefresh` elke minuut of je sessie bij Keycloak nog geldig is.
+- Zolang je de applicatie gebruikt, blijft je sessie bij Keycloak actief, ook zonder nieuwe pagina te laden. Elke 10 minuten laadt `base.html` `/sessie/verleng/` in een verborgen iframe, maar enkel als de tab zichtbaar is en je sinds de vorige keer een toets indrukte, klikte of scrolde. Doe je 30 minuten niets, dan verloopt je sessie zoals ingesteld in Keycloak.

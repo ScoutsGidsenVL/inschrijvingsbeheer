@@ -32,4 +32,28 @@
             {% block content %}{% endblock content %}
         </main>
     </div>
+    <script>
+        // Houdt je sessie bij Keycloak actief zolang je de applicatie gebruikt.
+        // Het script onthoudt enkel óf je iets deed sinds de vorige heartbeat (ja/nee).
+        // Wat je deed, wordt nergens bewaard of verstuurd.
+        (function () {
+            const INTERVAL_MS = 10 * 60 * 1000;  // ruim onder de 30 minuten SSO Session Idle
+            let actief = false;
+            for (const type of ["keydown", "pointerdown", "scroll"]) {
+                addEventListener(type, () => { actief = true; }, { passive: true, capture: true });
+            }
+
+            let frame = null;
+            setInterval(() => {
+                if (!actief || document.visibilityState !== "visible") return;
+                actief = false;
+                if (!frame) {
+                    frame = document.createElement("iframe");
+                    frame.hidden = true;
+                    document.body.appendChild(frame);
+                }
+                frame.src = "{% url "sessie_verlengen" %}?t=" + Date.now();
+            }, INTERVAL_MS);
+        })();
+    </script>
 </body>

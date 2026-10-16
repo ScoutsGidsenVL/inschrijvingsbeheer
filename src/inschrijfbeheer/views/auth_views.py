@@ -42,6 +42,26 @@ def frontchannel_logout(request: HttpRequest) -> HttpResponse:
     return HttpResponse(status=200)
 
 
+@never_cache
+@xframe_options_exempt
+def sessie_verlengen(request: HttpRequest) -> HttpResponse:
+    """Heartbeat voor `/sessie/verleng/`, geladen in een verborgen iframe
+
+    Het werk gebeurt in de SessionRefresh-middleware: is het ID token verlopen,
+    dan stuurt die de iframe stil langs Keycloak (prompt=none) en terug naar
+    hier. Keycloak telt dat als activiteit, waardoor de SSO-sessie niet
+    verloopt zolang je de applicatie gebruikt. Deze view geeft enkel een lege
+    pagina terug.
+
+    Args:
+        request (HttpRequest): HTTP request van de verborgen iframe
+
+    Returns:
+        HttpResponse: een lege response
+    """
+    return HttpResponse(status=200)
+
+
 def geen_toegang(request: HttpRequest) -> HttpResponse:
     """Pagina voor wie niet aangemeld is of geen toegang heeft, voor `/geen-toegang/`
 
