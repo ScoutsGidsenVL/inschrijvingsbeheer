@@ -21,6 +21,14 @@ PERSONEEL_VERANTWOORDELIJKHEID = "personeel"
 TOEGANG_CACHE_SECONDEN = 300
 TOEGANG_SESSIE_SLEUTEL = "personeel_gecontroleerd_op"
 
+# Waarom een login geweigerd werd, voor de pagina /geen-toegang/
+GEEN_TOEGANG_REDEN = "geen_toegang_reden"
+GEEN_TOEGANG_NAAM = "geen_toegang_naam"
+REDEN_GEEN_PERSONEEL = "geen_personeel"
+REDEN_CONTROLE_MISLUKT = "controle_mislukt"
+
+HELPDESK_EMAIL = "informatica@scoutsengidsenvlaanderen.be"
+
 logger = logging.getLogger("inschrijfbeheer")
 
 

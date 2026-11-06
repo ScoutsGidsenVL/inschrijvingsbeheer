@@ -37,6 +37,10 @@ Deze views maken voor het merendeel gebruik van templates gevonden in [templates
 - Die controle gebeurt bij het aanmelden en daarna opnieuw op elke pagina via `check_rollen` in [utils/auth.py](../src/inschrijfbeheer/utils/auth.py). Een geslaagde controle blijft 5 minuten geldig in de sessie.
 - Alle pagina's vragen aanmelding, ook `/docs` en `/handleidingen`. Enkel `/geen-toegang`, `/oidc` en de statische bestanden zijn publiek.
 - Wie geen personeel is, wordt niet bewaard in de databank.
+- Een geweigerde aanmelding stuurt je naar `/geen-toegang`. De backend zet de reden in de sessie en de pagina toont ze één keer:
+  - geen personeel: status 403, met uitleg en het adres van de helpdesk informatica. Er staat geen aanmeldknop, want de SSO van Keycloak zou je meteen opnieuw aanmelden en weer weigeren.
+  - controle bij Groepsadmin mislukt: status 503, met de knop **Opnieuw proberen**.
+  - geen reden (niet aangemeld, fout bij Keycloak): status 401, met de knop **Aanmelden**.
 - Meld je af bij Keycloak, dan laadt Keycloak `/sessie/afmelden/` in een verborgen iframe en word je ook hier afgemeld. Daarnaast controleert `SessionRefresh` elke minuut of je sessie bij Keycloak nog geldig is.
 - [scripts/sessie.js](../src/static/scripts/sessie.js), geladen in `base.html`, regelt de aanmelding op de achtergrond:
   - Zolang je de applicatie gebruikt, blijft je sessie bij Keycloak actief, ook zonder nieuwe pagina te laden. Druk je een toets in, klik of scrol je terwijl de tab zichtbaar is, en is de laatste verlenging meer dan 10 minuten geleden, dan laadt het script `/sessie/verleng/` in een verborgen iframe. Doe je 30 minuten niets, dan verloopt je sessie zoals ingesteld in Keycloak.

@@ -1,0 +1,7 @@
+{% extends "geen_toegang/basis.html" %}
+
+{% block inhoud %}
+    <p>Dag{% if naam %} {{ naam }}{% endif %},</p>
+    <p>Je hebt geen toegang tot inschrijvingsbeheer. Inschrijvingsbeheer is enkel toegankelijk voor personeel van het nationaal secretariaat van Scouts en Gidsen Vlaanderen.</p>
+    <p>Is er iets mis met je toegang? Mail dan naar <a href="mailto:{{ helpdesk_email }}">{{ helpdesk_email }}</a>.</p>
+{% endblock %}

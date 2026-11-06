@@ -8,7 +8,14 @@ from django.core.cache import cache
 from django.core.exceptions import SuspiciousOperation
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
-from inschrijfbeheer.utils.auth import is_personeel, onthoud_toegang
+from inschrijfbeheer.utils.auth import (
+    GEEN_TOEGANG_NAAM,
+    GEEN_TOEGANG_REDEN,
+    REDEN_CONTROLE_MISLUKT,
+    REDEN_GEEN_PERSONEEL,
+    is_personeel,
+    onthoud_toegang,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,24 +33,40 @@ class KeycloakOIDCBackend(OIDCAuthenticationBackend):
     def get_or_create_user(self, access_token, id_token, payload):
         """Laat enkel personeel inloggen en bewaart enkel hen als gebruiker.
 
-        Wie geen personeel is, krijgt geen gebruiker in de databank.
+        Wie geen personeel is, krijgt geen gebruiker in de databank. De reden van
+        een weigering komt in de sessie, zodat /geen-toegang/ de juiste melding toont.
         """
+        session = self.request.session
         try:
             toegang = is_personeel(access_token)
+            reden = REDEN_GEEN_PERSONEEL
         except (requests.RequestException, ValueError):
             logger.exception("Controle bij Groepsadmin faalde tijdens het inloggen")
             toegang = False
+            reden = REDEN_CONTROLE_MISLUKT
 
         if not toegang:
-            logger.warning("Login geweigerd: geen personeel")
+            logger.warning("Login geweigerd: %s", reden)
             # store_tokens bewaarde het access token al in de sessie
-            self.request.session.pop("oidc_access_token", None)
+            session.pop("oidc_access_token", None)
+            session[GEEN_TOEGANG_REDEN] = reden
+            session[GEEN_TOEGANG_NAAM] = self._volledige_naam(payload)
             return None
 
-        onthoud_toegang(self.request.session)
+        session.pop(GEEN_TOEGANG_REDEN, None)
+        session.pop(GEEN_TOEGANG_NAAM, None)
+        onthoud_toegang(session)
         # sid is nodig om een front-channel logout van Keycloak aan deze sessie te koppelen
         self.request.session["oidc_sid"] = payload.get("sid")
         return super().get_or_create_user(access_token, id_token, payload)
+
+    @staticmethod
+    def _volledige_naam(payload) -> str:
+        """Voor- en achternaam uit de claims, met `name` als terugval."""
+        payload = payload or {}
+        delen = [payload.get("given_name"), payload.get("family_name")]
+        naam = " ".join(deel for deel in delen if deel)
+        return naam or payload.get("name") or ""
 
     def retrieve_matching_jwk(self, token):
         jwks = cache.get(JWKS_CACHE_KEY)

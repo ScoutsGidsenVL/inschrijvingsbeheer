@@ -1,0 +1,6 @@
+{% extends "geen_toegang/basis.html" %}
+
+{% block inhoud %}
+    <p>Je bent niet aangemeld bij inschrijvingsbeheer.</p>
+    <p><a href="{% url "oidc_authentication_init" %}">Aanmelden</a></p>
+{% endblock %}

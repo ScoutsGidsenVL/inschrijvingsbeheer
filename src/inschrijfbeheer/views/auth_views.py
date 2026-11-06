@@ -11,6 +11,14 @@ from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.clickjacking import xframe_options_exempt
 
+from inschrijfbeheer.utils.auth import (
+    GEEN_TOEGANG_NAAM,
+    GEEN_TOEGANG_REDEN,
+    HELPDESK_EMAIL,
+    REDEN_CONTROLE_MISLUKT,
+    REDEN_GEEN_PERSONEEL,
+)
+
 logger = logging.getLogger("inschrijfbeheer")
 
 
@@ -96,13 +104,27 @@ def sessie_aangemeld(request: HttpRequest) -> HttpResponse:
     return render(request, "sessie_aangemeld.html")
 
 
+@never_cache
 def geen_toegang(request: HttpRequest) -> HttpResponse:
     """Pagina voor wie niet aangemeld is of geen toegang heeft, voor `/geen-toegang/`
+
+    De OIDC-backend zet de reden van een geweigerde login in de sessie. De melding
+    verschijnt één keer: na een refresh volgt de pagina voor wie niet aangemeld is.
+    Bij geen personeel staat er bewust geen aanmeldknop: de SSO van Keycloak zou
+    de gebruiker meteen opnieuw aanmelden en weer hier laten landen.
 
     Args:
         request (HttpRequest): HTTP request voor de pagina
 
     Returns:
-        HttpResponse: de pagina met een knop om aan te melden
+        HttpResponse: de pagina, met status 403, 503 of 401 volgens de reden
     """
-    return render(request, "geen_toegang.html")
+    reden = request.session.pop(GEEN_TOEGANG_REDEN, None)
+    naam = request.session.pop(GEEN_TOEGANG_NAAM, "")
+    context = {"naam": naam, "helpdesk_email": HELPDESK_EMAIL}
+
+    if reden == REDEN_GEEN_PERSONEEL:
+        return render(request, "geen_toegang/geen_personeel.html", context, status=403)
+    if reden == REDEN_CONTROLE_MISLUKT:
+        return render(request, "geen_toegang/controle_mislukt.html", context, status=503)
+    return render(request, "geen_toegang/niet_aangemeld.html", context, status=401)

@@ -1,0 +1,8 @@
+{% extends "geen_toegang/basis.html" %}
+
+{% block inhoud %}
+    <p>Dag{% if naam %} {{ naam }}{% endif %},</p>
+    <p>We konden niet nakijken of je toegang hebt. Probeer het over enkele minuten opnieuw.</p>
+    <p>Blijft het mislukken? Mail dan naar <a href="mailto:{{ helpdesk_email }}">{{ helpdesk_email }}</a>.</p>
+    <p><a href="{% url "oidc_authentication_init" %}">Opnieuw proberen</a></p>
+{% endblock %}
