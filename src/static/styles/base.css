@@ -158,6 +158,18 @@ button {
     font-size: 18px;
     cursor: pointer;
 }
+/* display: flex hierboven zou het hidden-attribuut negeren */
+.melding-popup[hidden] {
+    display: none;
+}
+.melding-popup .melding.fout {
+    color: #b42318;
+    margin: 0;
+}
+.melding-popup button.sessie-aanmelden {
+    font-size: 14px;
+    text-decoration: underline;
+}
 
 .waarschuwing {
     display: flex;

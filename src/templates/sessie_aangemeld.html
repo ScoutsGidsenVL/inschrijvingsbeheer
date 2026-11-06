@@ -1,0 +1,19 @@
+{% load static %}
+
+<head>
+    <title>Inschrijvingsbeheer</title>
+    <link rel="stylesheet" href="{% static "styles/base.css" %}">
+</head>
+<body>
+    <header class="hoofding">
+        <h1>Inschrijvingsbeheer</h1>
+    </header>
+    <main class="inhoud">
+        <p>Je bent opnieuw aangemeld. Sluit dit venster en ga verder waar je was.</p>
+    </main>
+    <script>
+        // Verwittigt de andere tabs van de applicatie (zie scripts/sessie.js)
+        new BroadcastChannel("inschrijvingsbeheer-sessie").postMessage("aangemeld");
+        window.close();
+    </script>
+</body>

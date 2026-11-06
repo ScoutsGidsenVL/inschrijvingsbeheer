@@ -17,7 +17,8 @@ De applicatie verdeelt de verantwoordelijkheden voor de paden van de URLs onder 
 
 | Pad | Verantwoordelijkheid |
 |-----|----------------------|
-| /oidc | django-oidc-auth, behalve `/oidc/frontchannel-logout/` (zie [Toegang](#toegang)) |
+| /oidc | django-oidc-auth |
+| /sessie | sessie afstemmen op Keycloak: afmelden, verlengen, status (zie [Toegang](#toegang)) |
 | /geen-toegang | pagina voor wie niet aangemeld is of geen toegang heeft |
 | /docs | wordt rechtstreeks doorverwezen naar de [README](./README.md) of een bestand [docs](./) |
 | /logs | wordt rechtstreeks afgehandeld door log_lijst (slechts één pad) |
@@ -36,5 +37,9 @@ Deze views maken voor het merendeel gebruik van templates gevonden in [templates
 - Die controle gebeurt bij het aanmelden en daarna opnieuw op elke pagina via `check_rollen` in [utils/auth.py](../src/inschrijfbeheer/utils/auth.py). Een geslaagde controle blijft 5 minuten geldig in de sessie.
 - Alle pagina's vragen aanmelding, ook `/docs` en `/handleidingen`. Enkel `/geen-toegang`, `/oidc` en de statische bestanden zijn publiek.
 - Wie geen personeel is, wordt niet bewaard in de databank.
-- Meld je af bij Keycloak, dan laadt Keycloak `/oidc/frontchannel-logout/` in een verborgen iframe en word je ook hier afgemeld. Daarnaast controleert `SessionRefresh` elke minuut of je sessie bij Keycloak nog geldig is.
-- Zolang je de applicatie gebruikt, blijft je sessie bij Keycloak actief, ook zonder nieuwe pagina te laden. Elke 10 minuten laadt `base.html` `/sessie/verleng/` in een verborgen iframe, maar enkel als de tab zichtbaar is en je sinds de vorige keer een toets indrukte, klikte of scrolde. Doe je 30 minuten niets, dan verloopt je sessie zoals ingesteld in Keycloak.
+- Meld je af bij Keycloak, dan laadt Keycloak `/sessie/afmelden/` in een verborgen iframe en word je ook hier afgemeld. Daarnaast controleert `SessionRefresh` elke minuut of je sessie bij Keycloak nog geldig is.
+- [scripts/sessie.js](../src/static/scripts/sessie.js), geladen in `base.html`, regelt de aanmelding op de achtergrond:
+  - Zolang je de applicatie gebruikt, blijft je sessie bij Keycloak actief, ook zonder nieuwe pagina te laden. Druk je een toets in, klik of scrol je terwijl de tab zichtbaar is, en is de laatste verlenging meer dan 10 minuten geleden, dan laadt het script `/sessie/verleng/` in een verborgen iframe. Doe je 30 minuten niets, dan verloopt je sessie zoals ingesteld in Keycloak.
+  - Elke minuut vraagt het `/sessie/status/` op. Die vraag verlengt de sessie niet. Ben je niet meer aangemeld, dan verschijnt een melding met de knop **Opnieuw aanmelden**. Die opent de aanmelding in een apart venster, zodat wat je invulde blijft staan. Na de aanmelding sluit dat venster zichzelf en verdwijnt de melding.
+  - Een formulier met POST wordt pas verstuurd als je nog aangemeld bent. Anders blijft het formulier staan en verschijnt de melding. Na opnieuw aanmelden zet het script het nieuwe CSRF-token in de formulieren.
+  - Het script onthoudt enkel óf je iets deed sinds de vorige verlenging. Wat je deed, wordt nergens bewaard of verstuurd.

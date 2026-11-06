@@ -4,7 +4,9 @@ import logging
 
 from django.conf import settings
 from django.contrib import auth
-from django.http import HttpRequest, HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.middleware.csrf import get_token
 from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -15,7 +17,7 @@ logger = logging.getLogger("inschrijfbeheer")
 @never_cache
 @xframe_options_exempt
 def frontchannel_logout(request: HttpRequest) -> HttpResponse:
-    """Front-channel logout van Keycloak, voor `/oidc/frontchannel-logout/`
+    """Front-channel logout van Keycloak, voor `/sessie/afmelden/`
 
     Bij het afmelden laadt Keycloak deze URL in een iframe, met `iss` en `sid`
     als parameters. Komen ze overeen met de sessie, dan wordt de gebruiker ook
@@ -60,6 +62,38 @@ def sessie_verlengen(request: HttpRequest) -> HttpResponse:
         HttpResponse: een lege response
     """
     return HttpResponse(status=200)
+
+
+@never_cache
+def sessie_status(request: HttpRequest) -> JsonResponse:
+    """Status van de aanmelding voor `/sessie/status/`, gebruikt door `scripts/sessie.js`
+
+    Staat in OIDC_EXEMPT_URLS: deze controle verlengt de sessie bij Keycloak niet.
+    Het CSRF-token zit erbij omdat Django bij een nieuwe aanmelding een nieuw token
+    maakt. Het script zet dat in de formulieren die al open staan.
+
+    Args:
+        request (HttpRequest): HTTP request van het script
+
+    Returns:
+        JsonResponse: `aangemeld` (bool) en `csrf` (het huidige CSRF-token)
+    """
+    return JsonResponse({"aangemeld": request.user.is_authenticated, "csrf": get_token(request)})
+
+
+@login_required
+def sessie_aangemeld(request: HttpRequest) -> HttpResponse:
+    """Landingspagina na opnieuw aanmelden in een apart venster, voor `/sessie/aangemeld/`
+
+    De pagina verwittigt de andere tabs van de applicatie en sluit zichzelf.
+
+    Args:
+        request (HttpRequest): HTTP request na de aanmelding
+
+    Returns:
+        HttpResponse: de pagina
+    """
+    return render(request, "sessie_aangemeld.html")
 
 
 def geen_toegang(request: HttpRequest) -> HttpResponse:

@@ -12,16 +12,24 @@ from django.views.static import serve
 
 from inschrijfbeheer.utils.auth import check_rollen
 from inschrijfbeheer.views import log_lijst
-from inschrijfbeheer.views.auth_views import frontchannel_logout, geen_toegang, sessie_verlengen
+from inschrijfbeheer.views.auth_views import (
+    frontchannel_logout,
+    geen_toegang,
+    sessie_aangemeld,
+    sessie_status,
+    sessie_verlengen,
+)
 
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="evenement_lijst"), name="home"),
-    # vóór de include, zodat deze URL niet door mozilla_django_oidc afgehandeld wordt
-    path("oidc/frontchannel-logout/", frontchannel_logout, name="oidc_frontchannel_logout"),
     path("oidc/", include("mozilla_django_oidc.urls")),
     path("geen-toegang/", geen_toegang, name="geen_toegang"),
+    # front-channel logout URL in de Keycloak-client
+    path("sessie/afmelden/", frontchannel_logout, name="oidc_frontchannel_logout"),
     # niet vrijstellen van SessionRefresh: die verlengt net de sessie bij Keycloak
     path("sessie/verleng/", sessie_verlengen, name="sessie_verlengen"),
+    path("sessie/status/", sessie_status, name="sessie_status"),
+    path("sessie/aangemeld/", sessie_aangemeld, name="sessie_aangemeld"),
     path(
         "docs/",
         check_rollen(serve),
