@@ -2,6 +2,7 @@
 
 import os
 from dataclasses import dataclass, field
+from urllib.parse import urlsplit, urlunsplit
 
 from dotenv import load_dotenv
 from zeep import Client
@@ -13,6 +14,8 @@ WSDL_URL = os.getenv("WSDL_URL")
 APPLICATIE_NAAM = os.getenv("APPLICATIE_NAAM")
 
 WEB_NAMESPACE = os.getenv("WEB_NAMESPACE")
+
+SOAP_BINDING = "{http://groepsadmin.scoutsengidsenvlaanderen.be/webservice/}webservices_gaSOAP"
 
 
 @dataclass
@@ -167,6 +170,19 @@ def _maak_client(wsdl_url=WSDL_URL, transport=None):
     return Client(wsdl=wsdl_url, transport=transport or Transport())
 
 
+def _maak_service(client: Client):
+    """Service die de aanvragen naar het adres van de opgehaalde WSDL stuurt.
+
+    Het soap:address in de WSDL wijst naar de publieke hostname. Zeep gebruikt dat
+    adres voor de calls, daarom koppelen we de binding expliciet aan het adres
+    waarlangs de WSDL opgehaald is (bv. het interne http://az-deb-ga-prod/...).
+    """
+    # WSDL-URL zonder query (?wsdl)
+    delen = urlsplit(client.wsdl.location)
+    endpoint = urlunsplit((delen.scheme, delen.netloc, delen.path, "", ""))
+    return client.create_service(SOAP_BINDING, endpoint)
+
+
 def haal_lidgegevens(gebruikersnaam, client=None, applicatie_naam=APPLICATIE_NAAM) -> LidGegevens:
     """
     Vraagt de lidgegevens (LidGegevensV3) op voor het lid met het gegeven
@@ -197,7 +213,7 @@ def haal_lidgegevens(gebruikersnaam, client=None, applicatie_naam=APPLICATIE_NAA
         adressen={},
     )
 
-    resultaat = client.service.LidGegevensV3(
+    resultaat = _maak_service(client).LidGegevensV3(
         gebruikersnaam=gebruikersnaam,
         scope=scope,
         _soapheaders={"applicatie": applicatie_naam},
