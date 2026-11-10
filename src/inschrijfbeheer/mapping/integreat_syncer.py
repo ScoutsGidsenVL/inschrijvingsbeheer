@@ -20,7 +20,7 @@ nagemaakte providers mee als sleutelwoord:
 
 Twee verwachtingen over die providers: de seminarprovider levert haal_op() op
 de seminarcode (niet op de oid), en de ledenprovider levert haal_op() op het
-lidnummer.
+lid-id (StudentNumber in Integreat).
 """
 
 import logging
@@ -429,13 +429,13 @@ class IntegreatSyncer(Synchronisatie):
             self.info.registreer(EvenementVraag, SynchronisatieActie.OVERGESLAGEN)
 
     def __bewaar_deelnemer(self, bron) -> Deelnemer | None:
-        lidnummer = (bron.lid_id or "").strip()
-        if not lidnummer:
-            logger.warning("Deelnemer %s zonder lidnummer", getattr(bron, "oid", "?"))
+        lid_id = (bron.lid_id or "").strip()
+        if not lid_id:
+            logger.warning("Deelnemer %s zonder lid-id", getattr(bron, "oid", "?"))
             self.info.registreer(Deelnemer, SynchronisatieActie.OVERGESLAGEN)
             return None
 
-        lidgegevens = self.providers.leden.haal_op(lidnummer)
+        lidgegevens = self.providers.leden.haal_op(lid_id)
         try:
             deelnemer, _ = self.bewaar(
                 self.deelnemers, self.deelnemers.mapper.map(bron, lidgegevens)

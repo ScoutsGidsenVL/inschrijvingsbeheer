@@ -11,7 +11,7 @@ logger = logging.getLogger("inschrijfbeheer")
 
 
 class LidProvider(ObjectProvider[Any]):
-    """Zoekt één lid op via zijn lidnummer.
+    """Zoekt één lid op via zijn lid-id of lidnummer, de Groepsadministratie aanvaardt beide.
 
     Deze bron heeft geen lijstvariant, vandaar enkel ObjectProvider. Vervang
     Any door het type dat haal_lidgegevens teruggeeft zodra dat een eigen

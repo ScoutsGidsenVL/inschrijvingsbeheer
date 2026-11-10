@@ -19,14 +19,14 @@ class IntegreatDeelnemerMapper(Mapper[IntegreatParticipant, Any, Deelnemer]):
     """
 
     def map(self, bron: IntegreatParticipant, context: Any) -> Doelgegevens[Deelnemer]:
-        lidnummer = tekst(bron.lid_id)
-        if not lidnummer:
-            raise MappingFout("deelnemer zonder lidnummer")
+        lid_id = tekst(bron.lid_id)
+        if not lid_id:
+            raise MappingFout("deelnemer zonder lid-id")
         if context is None:
-            raise MappingFout(f"geen ledengegevens gevonden voor lidnummer {lidnummer}")
+            raise MappingFout(f"geen ledengegevens gevonden voor lid-id {lid_id}")
 
         return Doelgegevens(
-            sleutels={"id": lidnummer},
+            sleutels={"id": lid_id},
             velden={
                 "voornaam": tekst(context.voornaam),
                 "achternaam": tekst(context.naam),
