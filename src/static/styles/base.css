@@ -55,12 +55,29 @@ tr:nth-child(even) {
     background-color: lightgray;
 }
 
+/* border-collapse is het CSS-equivalent van cellspacing="0" */
 table {
     width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 0.25rem 0.45rem;
 }
 
 th {
     text-align: left;
+}
+
+/* Enkel rijen in tbody, zodat de hoofding niet oplicht */
+tbody tr:hover {
+    background-color: #c4d7e8;
+}
+
+/* .foutrij zet de achtergrond met !important, dus een donkerdere tint nodig om op te vallen */
+tbody tr.foutrij:hover {
+    background-color: rgba(179, 38, 30, 0.2) !important;
 }
 
 button {
