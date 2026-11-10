@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -21,6 +21,7 @@ KOLOMMEN = {
     "titel": "Titel",
     "categorie": "Categorie",
     "status": "Status",
+    "aantal_inschrijvingen": "Inschrijvingen",
 }
 
 
@@ -44,8 +45,19 @@ def evenement_lijst(request: HttpRequest) -> HttpResponse:
     weez_filter: str = request.GET.get("weez", "")
     sorteer: str = request.GET.get("sorteer", "").strip()
 
-    evenementen = Evenement.objects.select_related("categorie").filter(
-        Q(titel__icontains=zoekterm) | Q(id__icontains=zoekterm)
+    # Effectieve inschrijvingen en uitschrijvingen in één query tellen.
+    # Een inschrijving met een annulatietijdstip telt als uitschrijving.
+    evenementen = (
+        Evenement.objects.select_related("categorie")
+        .filter(Q(titel__icontains=zoekterm) | Q(id__icontains=zoekterm))
+        .annotate(
+            aantal_inschrijvingen=Count(
+                "inschrijving", filter=Q(inschrijving__annulatie__isnull=True)
+            ),
+            aantal_uitschrijvingen=Count(
+                "inschrijving", filter=Q(inschrijving__annulatie__isnull=False)
+            ),
+        )
     )
 
     if categorie_naam:

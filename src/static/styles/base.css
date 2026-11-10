@@ -107,6 +107,13 @@ button {
     cursor: help;
 }
 
+/* Aantal uitschrijvingen naast het aantal inschrijvingen in de evenementenlijst.
+   Opacity in plaats van een vaste kleur, zodat het ook op een rode foutrij leesbaar blijft. */
+.uitschrijvingen {
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
 /* Elementen met een onclick-handler en uitklapbare details zijn klikbaar.
    Staat na .foutrij zodat klikbare foutrijen ook een handje tonen. */
 [onclick],
