@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Iterable
@@ -51,7 +52,21 @@ class WeezEvenementProvider(DataProvider[dict, EvenementFilter]):
 
         respons = self.client.get(
             f"https://api.weezevent.com/ticket/organizations/{self.client.organisatie}/events",
-            params={"time_status": "terminated"},
+        )
+
+        # De betekenis van time_status is niet gedocumenteerd. We loggen de waarden
+        # vóór de filtering om te zien wat de API teruggeeft.
+        for evenement in respons:
+            logger.debug(
+                "Weez-evenement %s: time_status=%r, einde=%r",
+                evenement.get("id"),
+                evenement.get("time_status"),
+                evenement.get("end_date") or evenement.get("start_date"),
+            )
+        logger.info(
+            "%d evenementen opgehaald bij Weez, per time_status: %s",
+            len(respons),
+            dict(Counter(evenement.get("time_status") for evenement in respons)),
         )
 
         if filter.alles:
