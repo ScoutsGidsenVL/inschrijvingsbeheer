@@ -226,7 +226,7 @@ LOGGING = {
     "loggers": {
         "inschrijfbeheer": {
             "handlers": ["db", "console"],
-            "level": "INFO",
+            "level": "DEBUG",
             "propagate": False,
         },
         # Zonder deze logger verdwijnen tracebacks van 500's bij DEBUG=False

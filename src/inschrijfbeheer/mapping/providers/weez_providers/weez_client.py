@@ -202,6 +202,14 @@ class WeezClient:
             request_headers["Authorization"] = f"Bearer {self.access_token}"
             response = send()
 
+        logger.debug(
+            "%s %s -> %s (%d bytes)",
+            method.upper(),
+            response.url,
+            response.status_code,
+            len(response.content),
+        )
+
         if response.status_code >= 400:
             raise WeezAPIError(response.status_code, url, _safe_body(response))
 
