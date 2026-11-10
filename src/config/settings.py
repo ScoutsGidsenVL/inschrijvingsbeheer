@@ -111,6 +111,8 @@ DATABASES = {
         "PORT": "1433",
         "USER": os.getenv("INTEGREAT_DB_USER"),
         "PASSWORD": os.getenv("INTEGREAT_DB_PASSWORD"),
+        # MSSQL bewaart naïeve tijdstippen in Belgische tijd
+        "TIME_ZONE": "Europe/Brussels",
         "OPTIONS": {
             "driver": "FreeTDS",
             "host_is_server": True,
@@ -180,7 +182,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Brussels"
+
+# Eigen datumformaten (dd/mm/jjjj), zie config/formats/en/formats.py.
+# De localeformaten van Django krijgen voorrang op DATE_FORMAT in settings,
+# daarom gebeurt de override via een formatmodule.
+FORMAT_MODULE_PATH = ["config.formats"]
 
 USE_I18N = True
 

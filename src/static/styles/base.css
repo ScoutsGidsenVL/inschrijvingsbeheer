@@ -201,3 +201,7 @@ summary {
     font-weight: bold;
     color: #b9770e;
 }
+
+.periode {
+    white-space: nowrap;
+}

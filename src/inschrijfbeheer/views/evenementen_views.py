@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.db.models import Count, F, Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -19,10 +19,13 @@ KOLOMMEN = {
     "id": "ID",
     "is_weez": "Weezevent",
     "titel": "Titel",
+    "starttijd": "Periode",
     "categorie": "Categorie",
     "status": "Status",
     "aantal_inschrijvingen": "Inschrijvingen",
 }
+
+STANDAARD_SORTERING = "starttijd"
 
 
 @check_rollen
@@ -43,7 +46,7 @@ def evenement_lijst(request: HttpRequest) -> HttpResponse:
     zoekterm: str = request.GET.get("q", "").strip()
     categorie_naam: str = request.GET.get("categorie", "").strip()
     weez_filter: str = request.GET.get("weez", "")
-    sorteer: str = request.GET.get("sorteer", "").strip()
+    sorteer: str = request.GET.get("sorteer", "").strip() or STANDAARD_SORTERING
 
     # Effectieve inschrijvingen en uitschrijvingen in één query tellen.
     # Een inschrijving met een annulatietijdstip telt als uitschrijving.
@@ -70,8 +73,12 @@ def evenement_lijst(request: HttpRequest) -> HttpResponse:
         else:
             evenementen = evenementen.exclude(is_weez=True)
 
-    if sorteer.lstrip("-") in KOLOMMEN:
-        evenementen = evenementen.order_by(sorteer)
+    # Lege waarden (bv. geen starttijd) altijd achteraan, ook bij aflopend sorteren.
+    # Het id als tiebreaker houdt de paginering stabiel.
+    veld = sorteer.lstrip("-")
+    if veld in KOLOMMEN:
+        richting = F(veld).desc if sorteer.startswith("-") else F(veld).asc
+        evenementen = evenementen.order_by(richting(nulls_last=True), "id")
 
     categorieen = Categorie.objects.all()
 
@@ -84,6 +91,7 @@ def evenement_lijst(request: HttpRequest) -> HttpResponse:
             "evenementen": evenementen,
             "categorieen": categorieen,
             "querystring": querystring,
+            "standaard_sortering": STANDAARD_SORTERING,
         },
     )
 

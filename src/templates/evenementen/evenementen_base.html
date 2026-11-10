@@ -26,7 +26,7 @@
     {% else %}
         <div class="info">
             <div class="info-icoon">💡</div>
-            <div class="info-tekst"> Laatst gesynchroniseerd op {{ evenement.laatste_sync|date:"j/m/Y H:i:s" }}</div>
+            <div class="info-tekst"> Laatst gesynchroniseerd op {{ evenement.laatste_sync|date:"d/m/Y H:i:s" }}</div>
             <button class="synchronisatie-knop" onclick="synchroniseer()">Synchroniseer</button>
         </div>
     {% endif %}

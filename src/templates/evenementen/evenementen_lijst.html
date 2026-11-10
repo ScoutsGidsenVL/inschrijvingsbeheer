@@ -33,6 +33,7 @@
             <th><a href="{% sorteer_url 'id' %}">ID</a> {% sorteer_icoon 'id' %}</th>
             <th><a href="{% sorteer_url 'is_weez' %}">Weezevent</a> {% sorteer_icoon 'is_weez' %}</th>
             <th><a href="{% sorteer_url 'titel' %}">Titel</a> {% sorteer_icoon 'titel' %}</th>
+            <th><a href="{% sorteer_url 'starttijd' %}">Periode</a> {% sorteer_icoon 'starttijd' %}</th>
             <th><a href="{% sorteer_url 'categorie' %}">Categorie</a> {% sorteer_icoon 'categorie' %}</th>
             <th><a href="{% sorteer_url 'status' %}">Status</a> {% sorteer_icoon 'status' %}</th>
             <th><a href="{% sorteer_url 'aantal_inschrijvingen' %}">Inschrijvingen</a> {% sorteer_icoon 'aantal_inschrijvingen' %}</th>
@@ -45,6 +46,12 @@
                 <td>{{ evenement.id }}</td>
                 <td><input type="checkbox" disabled {% if evenement.is_weez %}checked{% endif %}></td>
                 <td>{{ evenement.titel }}</td>
+                <td class="periode">
+                    {{ evenement.starttijd|date }}
+                    {% if evenement.eindtijd and evenement.eindtijd|date:"Ymd" != evenement.starttijd|date:"Ymd" %}
+                        – {{ evenement.eindtijd|date }}
+                    {% endif %}
+                </td>
                 <td>{{ evenement.categorie }}</td>
                 <td>{{ evenement.status }}</td>
                 <td>

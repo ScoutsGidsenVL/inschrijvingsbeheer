@@ -1,5 +1,5 @@
 {% extends "deelnemers/deelnemers_base.html" %}
-{% load static %}
+{% load static type_filters %}
 
 {% block extra_deelnemers_headers %}
     <link rel="stylesheet" href="{% static "styles/detail_pagina.css" %}">
@@ -26,7 +26,7 @@
 <div class="detail-attribuut-container">
     <div class="detail-attribuut-label">Geboortedatum</div>
     <div class="detail-attribuut-waarde">
-        {{ gegevens.geboortedatum }}
+        {{ gegevens.geboortedatum|formateer_iso_datum }}
     </div>
 </div>
 <div class="detail-attribuut-container">
@@ -62,7 +62,7 @@
     {% if groep.functies %}
         <ul>
             {% for functie in groep.functies %}
-                <li>{{ functie.beschrijving }} ({{ functie.code }}), sinds {{ functie.bdatum }}</li>
+                <li>{{ functie.beschrijving }} ({{ functie.code }}), sinds {{ functie.bdatum|formateer_iso_datum }}</li>
             {% endfor %}
         </ul>
     {% else %}
