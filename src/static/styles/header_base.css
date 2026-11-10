@@ -12,14 +12,9 @@
     flex-wrap: wrap;
 }
 
+/* Erft de stijl van button in base.css, de titelrij regelt de afstand via gap */
 .header-terug-knop {
-    background-color: #333;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
+    margin: 0;
 }
 
 .header-terug-knop:hover {

@@ -107,6 +107,13 @@ button {
     cursor: help;
 }
 
+/* Elementen met een onclick-handler en uitklapbare details zijn klikbaar.
+   Staat na .foutrij zodat klikbare foutrijen ook een handje tonen. */
+[onclick],
+summary {
+    cursor: pointer;
+}
+
 .info {
     display: flex;
     align-items: center;
@@ -156,7 +163,6 @@ button {
     background: none;
     border: none;
     font-size: 18px;
-    cursor: pointer;
 }
 /* display: flex hierboven zou het hidden-attribuut negeren */
 .melding-popup[hidden] {
