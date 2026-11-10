@@ -436,6 +436,20 @@ class IntegreatSyncer(Synchronisatie):
             return None
 
         lidgegevens = self.providers.leden.haal_op(lid_id)
+        if lidgegevens is None:
+            # Zonder ledengegevens maken we geen deelnemer aan. De Integreat-gegevens
+            # in de log laten toe om het lid manueel op te zoeken in de Groepsadmin.
+            logger.error(
+                "Lid niet gevonden in de Groepsadministratie, deelnemer overgeslagen: "
+                "FirstName=%s, LastName=%s, OID=%s, StudentNumber=%s",
+                getattr(bron, "voornaam", None),
+                getattr(bron, "achternaam", None),
+                getattr(bron, "oid", None),
+                lid_id,
+            )
+            self.info.registreer(Deelnemer, SynchronisatieActie.OVERGESLAGEN)
+            return None
+
         try:
             deelnemer, _ = self.bewaar(
                 self.deelnemers, self.deelnemers.mapper.map(bron, lidgegevens)

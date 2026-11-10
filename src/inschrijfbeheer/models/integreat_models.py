@@ -17,6 +17,8 @@ class IntegreatParticipant(models.Model):
     oid = models.PositiveIntegerField(primary_key=True, db_column="OID")
     opzoek_naam = models.CharField(db_column="LookupName")
     lid_id = models.CharField(db_column="StudentNumber")
+    voornaam = models.CharField(db_column="FirstName")
+    achternaam = models.CharField(db_column="LastName")
 
     # Niet geïnteresseerd in andere velden -> worden genegeerd
     class Meta:
