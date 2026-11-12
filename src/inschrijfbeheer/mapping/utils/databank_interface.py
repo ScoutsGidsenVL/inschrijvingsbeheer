@@ -1,6 +1,8 @@
 from typing import TypeVar
 
-from inschrijfbeheer.mapping.logic.mapper import Doelgegevens
+from django.core.exceptions import MultipleObjectsReturned
+
+from inschrijfbeheer.mapping.logic.mapper import Doelgegevens, MappingFout
 
 from .synchronisatie import SynchronisatieActie, SynchronisatieInfo, SyncOnderdelen
 
@@ -36,17 +38,29 @@ class InschrijfbeheerDatabank:
                 bestaand.delete()
                 self.info.registreer(onderdelen.model, SynchronisatieActie.VERWIJDERD)
 
-        if onderdelen.enkel_aanmaken:
-            bewaard, aangemaakt = manager.get_or_create(
-                **doel.sleutels,
-                defaults={**doel.velden},
-            )
+        try:
+            if onderdelen.enkel_aanmaken:
+                bewaard, aangemaakt = manager.get_or_create(
+                    **doel.sleutels,
+                    defaults={**doel.velden},
+                )
+            else:
+                bewaard, aangemaakt = manager.update_or_create(
+                    **doel.sleutels, defaults=doel.velden
+                )
+        except MultipleObjectsReturned as fout:
+            # De sleutels horen uniek te zijn, maar de databank bevat dubbels. Behandel dat
+            # als onbruikbare data: de aanroeper slaat de rij over en de sync gaat verder.
+            pks = list(manager.filter(**doel.sleutels).values_list("pk", flat=True))
+            raise MappingFout(
+                f"Meerdere {onderdelen.model.__name__} voor sleutels {doel.sleutels!r} "
+                f"(pk's: {pks})"
+            ) from fout
 
+        if onderdelen.enkel_aanmaken:
             if aangemaakt:
                 self.info.registreer(onderdelen.model, SynchronisatieActie.AANGEMAAKT)
             return bewaard, aangemaakt
-
-        bewaard, aangemaakt = manager.update_or_create(**doel.sleutels, defaults=doel.velden)
 
         self.info.registreer(
             onderdelen.model,
