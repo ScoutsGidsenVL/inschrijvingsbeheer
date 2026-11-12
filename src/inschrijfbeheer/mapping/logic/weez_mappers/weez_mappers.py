@@ -11,17 +11,27 @@ los_lid_op(), omdat dat synchronisatiebeleid is en geen omzetting.
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 from zoneinfo import ZoneInfo
 
 from django.utils import timezone
 
+from inschrijfbeheer.mapping.logic.mapper import Uitkomst
 from inschrijfbeheer.mapping.providers.lid_provider import LidProvider
+from inschrijfbeheer.utils.soap import LidGegevens
 
 logger = logging.getLogger("inschrijfbeheer")
 
 EVENT_TIJDZONE = ZoneInfo("Europe/Brussels")
-VERPLICHTE_VRAGEN = {"last name", "first name", "email", "lidnummer", "date of birth"}
+# Weez-label van elke verplichte vraag, met de veldnaam die de gebruiker kent.
+VELDNAMEN = {
+    "lidnummer": "lidnummer",
+    "first name": "voornaam",
+    "last name": "achternaam",
+    "email": "e-mailadres",
+    "date of birth": "geboortedatum",
+}
+VERPLICHTE_VRAGEN = set(VELDNAMEN)
+LIDNUMMER_LENGTE = 13
 
 
 def parse_datetime(waarde: str | None) -> datetime | None:
@@ -56,85 +66,102 @@ def check_verplichte_vragen(vragen: list[dict] | None) -> tuple[bool, set]:
     return VERPLICHTE_VRAGEN.issubset(labels), VERPLICHTE_VRAGEN.difference(labels)
 
 
-def bepaal_inschrijvingsgegevens(vragen: list[dict] | None) -> InschrijvingsGegevens | None:
+def bepaal_inschrijvingsgegevens(vragen: list[dict] | None) -> Uitkomst[InschrijvingsGegevens]:
     """Haalt de ledengegevens uit de antwoorden van een deelnemer.
 
-    Geeft None terug wanneer één van de vier velden leeg blijft, want dan valt
-    er geen deelnemer van te maken.
+    Geeft een fout zonder waarde terug wanneer niet precies vijf verplichte antwoorden
+    ingevuld zijn, want dan valt er geen deelnemer van te maken. De reden noemt
+    welke velden ontbreken en welke dubbel ingevuld zijn.
     """
     gegevens = InschrijvingsGegevens()
-    aantal = 0
+    ingevuld = dict.fromkeys(VELDNAMEN, 0)
 
     for vraag in vragen or []:
-        waarde = vraag.get("answer")
+        waarde = str(vraag.get("answer") or "").strip()
         if not waarde:
             continue
 
-        match (vraag.get("question") or "").lower():
+        label = (vraag.get("question") or "").lower()
+        match label:
             case "lidnummer":
                 gegevens.lidnummer = waarde
-                aantal += 1
             case "last name":
                 gegevens.achternaam = waarde
-                aantal += 1
             case "first name":
                 gegevens.voornaam = waarde
-                aantal += 1
             case "email":
                 gegevens.mailadres = waarde
-                aantal += 1
             case "date of birth":
                 gegevens.geboortedatum = waarde
-                aantal += 1
+            case _:
+                continue
+        ingevuld[label] += 1
 
-    if aantal == len(VERPLICHTE_VRAGEN):
-        return gegevens
-    return None
+    if sum(ingevuld.values()) == len(VERPLICHTE_VRAGEN):
+        return Uitkomst(waarde=gegevens)
+
+    ontbrekend = [VELDNAMEN[label] for label, aantal in ingevuld.items() if aantal == 0]
+    dubbel = [VELDNAMEN[label] for label, aantal in ingevuld.items() if aantal > 1]
+    redenen = []
+    if ontbrekend:
+        redenen.append(f"ontbrekend: {', '.join(ontbrekend)}")
+    if dubbel:
+        redenen.append(f"dubbel ingevuld: {', '.join(dubbel)}")
+    return Uitkomst(fout="; ".join(redenen))
+
+
+def reden_ongeldig_lidnummer(lidnummer: str) -> str:
+    """Geeft aan waarom een lidnummer ongeldig is, of een lege string als het geldig is."""
+    if not lidnummer:
+        return "leeg"
+    if not lidnummer.isnumeric():
+        return "bevat andere tekens dan cijfers"
+    if len(lidnummer) != LIDNUMMER_LENGTE:
+        return f"{len(lidnummer)} cijfers, verwacht {LIDNUMMER_LENGTE}"
+    return ""
 
 
 def valideer_lidnummer(lidnummer: str) -> bool:
-    """Een lidnummer is numeriek en 13 of 14 tekens lang."""
-    return lidnummer.isnumeric() and 12 < len(lidnummer) < 15
+    """Een lidnummer bestaat uit precies 13 cijfers."""
+    return not reden_ongeldig_lidnummer(lidnummer)
 
 
-@dataclass(frozen=True)
-class LidResultaat:
-    """Uitkomst van de ledenopzoeking, dient als context voor WeezDeelnemerMapper.
+def _gelijk(a: str | None, b: str | None) -> bool:
+    """Vergelijkt twee waarden zonder witruimte errond en zonder onderscheid in hoofdletters."""
+    return (a or "").strip().casefold() == (b or "").strip().casefold()
 
-    Attributes:
-        lidgegevens: de gegevens uit de ledendatabank, None als de opzoeking
-            niets bruikbaars opleverde
-        foutboodschap: waarom de opzoeking niets opleverde, wordt op de
-            deelnemer bewaard zodat iemand het achteraf kan rechtzetten
+
+def los_lid_op(provider: LidProvider, gegevens: InschrijvingsGegevens) -> Uitkomst[LidGegevens]:
+    """Zoekt het lid op en past de controleregels toe.
+
+    De uitkomst dient als context voor WeezDeelnemerMapper. Een fout wordt op de
+    deelnemer bewaard, zodat iemand het achteraf kan rechtzetten.
     """
+    reden = reden_ongeldig_lidnummer(gegevens.lidnummer)
+    if reden:
+        return Uitkomst(fout=f"Ongeldig lidnummer ({reden}): {gegevens.lidnummer}")
 
-    lidgegevens: Any | None = None
-    foutboodschap: str = ""
-
-
-def los_lid_op(provider: LidProvider, gegevens: InschrijvingsGegevens) -> LidResultaat:
-    """Zoekt het lid op en past de controleregels toe."""
-    if not valideer_lidnummer(gegevens.lidnummer):
-        return LidResultaat(foutboodschap=f"Ongeldig lidnummer ingegeven: {gegevens.lidnummer}")
-
-    lidgegevens = provider.haal_op(gegevens.lidnummer)
+    opzoeking = provider.zoek_op(gegevens.lidnummer)
+    lidgegevens = opzoeking.waarde
     if lidgegevens is None:
-        return LidResultaat(foutboodschap=f"Lidnummer niet gevonden: {gegevens.lidnummer}")
+        return opzoeking
 
-    aantal_overeenkomsten = sum(
-        [
-            lidgegevens.voornaam == gegevens.voornaam,
-            lidgegevens.naam == gegevens.achternaam,
-            lidgegevens.emailadres == gegevens.mailadres,
-            datetime.strptime(lidgegevens.geboortedatum, "%Y-%m-%d")
-            == datetime.strptime(gegevens.geboortedatum, "%d/%m/%Y"),
-            lidgegevens.lidnummer == gegevens.lidnummer,
-        ]
-    )
+    overeenkomsten = {
+        "voornaam": _gelijk(lidgegevens.voornaam, gegevens.voornaam),
+        "achternaam": _gelijk(lidgegevens.naam, gegevens.achternaam),
+        "e-mailadres": _gelijk(lidgegevens.emailadres, gegevens.mailadres),
+        "geboortedatum": datetime.strptime(lidgegevens.geboortedatum, "%Y-%m-%d")
+        == datetime.strptime(gegevens.geboortedatum, "%d/%m/%Y"),
+        "lidnummer": _gelijk(lidgegevens.lidnummer, gegevens.lidnummer),
+    }
 
-    if aantal_overeenkomsten < 3:
-        return LidResultaat(
-            foutboodschap=f"Onvoldoende matchende velden in inschrijving: {gegevens.lidnummer}"
+    if sum(overeenkomsten.values()) < 3:
+        afwijkend = [veld for veld, gelijk in overeenkomsten.items() if not gelijk]
+        return Uitkomst(
+            fout=(
+                f"Onvoldoende overeenkomende velden ({gegevens.lidnummer}), "
+                f"afwijkend: {', '.join(afwijkend)}"
+            )
         )
 
-    return LidResultaat(lidgegevens=lidgegevens)
+    return opzoeking

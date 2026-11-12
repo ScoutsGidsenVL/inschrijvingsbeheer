@@ -241,15 +241,21 @@ class WeezSyncer(Synchronisatie):
             if vraag_index is None:
                 vraag_index = self.__bewaar_vragen(evenement, vragen)
 
-            gegevens = bepaal_inschrijvingsgegevens(vragen)
+            deelnemer_id = bron.get("id")
+            inschrijvingsgegevens = bepaal_inschrijvingsgegevens(vragen)
+            gegevens = inschrijvingsgegevens.waarde
             if gegevens is None:
                 logger.warning(
-                    "Deelnemer met onvolledige ledengegevens op evenement %s", evenement.id
+                    "Deelnemer %s met onvolledige ledengegevens op evenement %s: %s%s",
+                    deelnemer_id,
+                    evenement.id,
+                    inschrijvingsgegevens.fout,
+                    " (geannuleerd in Weez)" if bron.get("removed") else "",
                 )
                 self.info.registreer(Inschrijving, SynchronisatieActie.OVERGESLAGEN)
                 continue
 
-            deelnemer = self.__bewaar_deelnemer(gegevens)
+            deelnemer = self.__bewaar_deelnemer(gegevens, evenement, deelnemer_id)
             if deelnemer is None:
                 self.info.registreer(Inschrijving, SynchronisatieActie.OVERGESLAGEN)
                 continue
@@ -306,10 +312,17 @@ class WeezSyncer(Synchronisatie):
             self.info.registreer(Categorie, SynchronisatieActie.OVERGESLAGEN)
             return None
 
-    def __bewaar_deelnemer(self, gegevens: InschrijvingsGegevens) -> Deelnemer | None:
+    def __bewaar_deelnemer(
+        self, gegevens: InschrijvingsGegevens, evenement: Evenement, deelnemer_id: str | None
+    ) -> Deelnemer | None:
         resultaat = los_lid_op(self.lid_provider, gegevens)
-        if resultaat.foutboodschap:
-            logger.warning("Deelnemer met foutboodschap: %s", resultaat.foutboodschap)
+        if resultaat.fout:
+            logger.warning(
+                "Deelnemer %s op evenement %s: %s",
+                deelnemer_id,
+                evenement.id,
+                resultaat.fout,
+            )
 
         try:
             deelnemer, _ = self.bewaar(

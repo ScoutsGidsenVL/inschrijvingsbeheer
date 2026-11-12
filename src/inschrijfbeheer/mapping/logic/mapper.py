@@ -14,6 +14,19 @@ class MappingFout(Exception):
 
 
 @dataclass(frozen=True)
+class Uitkomst[W]:
+    """Een waarde, of de reden waarom die er niet is.
+
+    Attributes:
+        waarde: het resultaat, None als er niets bruikbaars uitkwam
+        fout: waarom er geen waarde is, leeg bij succes
+    """
+
+    waarde: W | None = None
+    fout: str = ""
+
+
+@dataclass(frozen=True)
 class Doelgegevens(Generic[N]):
     """Alles wat nodig is om N te bewaren, klaar voor update_or_create.
 

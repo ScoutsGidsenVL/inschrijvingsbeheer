@@ -19,7 +19,7 @@ nagemaakte providers mee als sleutelwoord:
     IntegreatSyncer(config, providers=IntegreatProviders(seminars=..., ...))
 
 Twee verwachtingen over die providers: de seminarprovider levert haal_op() op
-de seminarcode (niet op de oid), en de ledenprovider levert haal_op() op het
+de seminarcode (niet op de oid), en de ledenprovider levert zoek_op() op het
 lid-id (StudentNumber in Integreat).
 """
 
@@ -89,7 +89,7 @@ class IntegreatProviders:
     vragen: LijstProvider
     registraties: LijstProvider
     antwoorden: LijstProvider
-    leden: LijstProvider
+    leden: LidProvider
 
     @classmethod
     def standaard(cls) -> "IntegreatProviders":
@@ -435,13 +435,15 @@ class IntegreatSyncer(Synchronisatie):
             self.info.registreer(Deelnemer, SynchronisatieActie.OVERGESLAGEN)
             return None
 
-        lidgegevens = self.providers.leden.haal_op(lid_id)
+        opzoeking = self.providers.leden.zoek_op(lid_id)
+        lidgegevens = opzoeking.waarde
         if lidgegevens is None:
             # Zonder ledengegevens maken we geen deelnemer aan. De Integreat-gegevens
             # in de log laten toe om het lid manueel op te zoeken in de Groepsadmin.
             logger.error(
-                "Lid niet gevonden in de Groepsadministratie, deelnemer overgeslagen: "
+                "%s, deelnemer overgeslagen: "
                 "FirstName=%s, LastName=%s, OID=%s, StudentNumber=%s",
+                opzoeking.fout,
                 getattr(bron, "voornaam", None),
                 getattr(bron, "achternaam", None),
                 getattr(bron, "oid", None),
