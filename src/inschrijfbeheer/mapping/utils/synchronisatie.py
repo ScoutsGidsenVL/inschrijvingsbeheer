@@ -4,7 +4,6 @@ from enum import Enum, auto
 from typing import Any, Generic, TypeVar
 
 from inschrijfbeheer.mapping.logic.mapper import Mapper
-from inschrijfbeheer.mapping.providers.data_provider import LijstProvider, ObjectProvider
 
 N = TypeVar("N")
 
@@ -107,9 +106,6 @@ class SyncOnderdelen(Generic[N]):
         model: het Django-model, nodig om te bewaren en om de actie in
             SynchronisatieInfo te registreren
         mapper: zet brondata plus context om naar Doelgegevens
-        provider: haalt de brondata op. Blijft None voor modellen waarvan de
-            data genest in het antwoord van een ander model zit, zoals de
-            categorie in een evenement of de vragen in een inschrijving.
         enkel_aanmaken: True voor modellen die de synchronisatie na het
             aanmaken niet meer mag overschrijven. Dan gebruikt bewaar()
             get_or_create in plaats van update_or_create.
@@ -117,5 +113,4 @@ class SyncOnderdelen(Generic[N]):
 
     model: type[N]
     mapper: Mapper[Any, Any, N]
-    provider: ObjectProvider | LijstProvider | None = None
     enkel_aanmaken: bool = False

@@ -10,18 +10,6 @@ F = TypeVar("F")
 M = TypeVar("M", bound=Model)
 
 
-class ObjectProvider(Generic[T], ABC):
-    """Voor bronnen die één object per identifier kunnen leveren."""
-
-    @abstractmethod
-    def haal_op(self, identifier: str) -> T | None:
-        """Haalt één object op via zijn identifier.
-
-        Geeft None terug als er bij de bron niets met die identifier bestaat.
-        """
-        raise NotImplementedError
-
-
 class LijstProvider(Generic[T, F], ABC):
     """Voor bronnen die meerdere objecten kunnen leveren.
 
@@ -37,8 +25,16 @@ class LijstProvider(Generic[T, F], ABC):
         raise NotImplementedError
 
 
-class DataProvider(ObjectProvider[T], LijstProvider[T, F], ABC):
+class DataProvider(LijstProvider[T, F], ABC):
     """Voor bronnen die zowel één object als een lijst kunnen leveren."""
+
+    @abstractmethod
+    def haal_op(self, identifier: str) -> T | None:
+        """Haalt één object op via zijn identifier.
+
+        Geeft None terug als er bij de bron niets met die identifier bestaat.
+        """
+        raise NotImplementedError
 
 
 @dataclass

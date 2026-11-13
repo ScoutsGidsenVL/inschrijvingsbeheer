@@ -134,21 +134,14 @@ class WeezSyncer(Synchronisatie):
         self.categorieen = SyncOnderdelen(
             model=Categorie, mapper=WeezCategorieMapper(), enkel_aanmaken=True
         )
-        self.evenementen = SyncOnderdelen(
-            model=Evenement, mapper=WeezEvenementMapper(), provider=self.evenement_provider
-        )
+        self.evenementen = SyncOnderdelen(model=Evenement, mapper=WeezEvenementMapper())
         self.deelnemers = SyncOnderdelen(model=Deelnemer, mapper=WeezDeelnemerMapper())
         self.inschrijvingen = SyncOnderdelen(
             model=Inschrijving,
             mapper=WeezInschrijvingMapper(),
-            provider=self.inschrijving_provider,
             enkel_aanmaken=False,
         )
-        self.tarieven = SyncOnderdelen(
-            model=DeelnemerType,
-            mapper=WeezDeelnemerTypeMapper(),
-            provider=self.tarieven_provider,
-        )
+        self.tarieven = SyncOnderdelen(model=DeelnemerType, mapper=WeezDeelnemerTypeMapper())
         self.vragen = SyncOnderdelen(
             model=EvenementVraag, mapper=WeezEvenementVraagMapper(), enkel_aanmaken=False
         )
@@ -184,7 +177,7 @@ class WeezSyncer(Synchronisatie):
     ) -> SynchronisatieInfo:
         bron = self.evenement_provider.haal_op(evenement_id)
         if not bron:
-            logger.warning("Geen details gevonden voor evenement %s", evenement_id)
+            logger.warning("Evenement %s niet gevonden bij Weez", evenement_id)
             self.info.registreer(Evenement, SynchronisatieActie.OVERGESLAGEN)
             return self.info
 

@@ -146,32 +146,20 @@ class IntegreatSyncer(Synchronisatie):
         """
         providers = self.providers
         self.categorieen = SyncOnderdelen(model=Categorie, mapper=IntegreatCategorieMapper())
-        self.evenementen = SyncOnderdelen(
-            model=Evenement, mapper=IntegreatEvenementMapper(), provider=providers.seminars
-        )
+        self.evenementen = SyncOnderdelen(model=Evenement, mapper=IntegreatEvenementMapper())
         self.deelnemertypes = SyncOnderdelen(
-            model=DeelnemerType,
-            mapper=IntegreatDeelnemerTypeMapper(),
-            provider=providers.deelnemertypes,
+            model=DeelnemerType, mapper=IntegreatDeelnemerTypeMapper()
         )
         self.deelnemers = SyncOnderdelen(model=Deelnemer, mapper=IntegreatDeelnemerMapper())
         self.inschrijvingen = SyncOnderdelen(
-            model=Inschrijving,
-            mapper=IntegreatInschrijvingMapper(),
-            provider=providers.registraties,
+            model=Inschrijving, mapper=IntegreatInschrijvingMapper()
         )
         self.vraagtypes = SyncOnderdelen(
-            model=EvenementVraagType,
-            mapper=IntegreatVraagTypeMapper(),
-            provider=providers.vraagtypes,
+            model=EvenementVraagType, mapper=IntegreatVraagTypeMapper()
         )
-        self.vragen = SyncOnderdelen(
-            model=EvenementVraag, mapper=IntegreatEvenementVraagMapper(), provider=providers.vragen
-        )
+        self.vragen = SyncOnderdelen(model=EvenementVraag, mapper=IntegreatEvenementVraagMapper())
         self.antwoorden = SyncOnderdelen(
-            model=InschrijvingVraagAntwoord,
-            mapper=IntegreatAntwoordMapper(),
-            provider=providers.antwoorden,
+            model=InschrijvingVraagAntwoord, mapper=IntegreatAntwoordMapper()
         )
 
     def synchroniseer(self) -> SynchronisatieInfo:

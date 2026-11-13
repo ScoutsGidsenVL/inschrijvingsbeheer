@@ -7,7 +7,7 @@ from typing import Iterable
 from inschrijfbeheer.mapping.logic.weez_mappers.weez_mappers import parse_datetime
 from inschrijfbeheer.mapping.providers.data_provider import DataProvider
 
-from .weez_client import WeezClient
+from .weez_client import WeezAPIError, WeezClient
 
 logger = logging.getLogger("inschrijfbeheer")
 
@@ -31,12 +31,19 @@ class WeezEvenementProvider(DataProvider[dict, EvenementFilter]):
         self.client = client
 
     def haal_op(self, identifier: str) -> dict | None:
-        evenement = self.client.get(
-            f"https://api.weezevent.com/ticket/organizations/{self.client.organisatie}/events/{identifier}"
-        )
-        if evenement is None:
-            logger.warning("Geen evenement gevonden bij Weez voor id %s", identifier)
-        return evenement
+        """Geeft None als Weez het evenement niet kent (404). Andere fouten gaan naar boven.
+
+        Logt zelf niets, de aanroeper logt met zijn eigen context.
+        """
+        try:
+            return self.client.get(
+                f"https://api.weezevent.com/ticket/organizations/{self.client.organisatie}"
+                f"/events/{identifier}"
+            )
+        except WeezAPIError as fout:
+            if fout.status_code == 404:
+                return None
+            raise
 
     def haal_alle_op(self, filter: EvenementFilter | None = None) -> Iterable[dict]:
         """Haalt alle evenementen op

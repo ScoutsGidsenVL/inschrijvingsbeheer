@@ -5,7 +5,6 @@ from .data_provider import (
     DataProvider,
     IntegreatFilter,
     LijstProvider,
-    ObjectProvider,
 )
 from .integreat_providers import *
 from .lid_provider import LidProvider
