@@ -40,14 +40,14 @@ class Deelnemer(models.Model):
     moet de UI steeds SOAP calls maken naar de GA wat lange wachttijden tot gevolg heeft
 
     Attributes:
-        id (str): id van het lid uit de GA. maximale lengte van 32
+        id (str): id van het lid uit de GA. Maximale lengte 255, zoals lid.id in de GA
         voornaam (str): voornaam van het lid
         achternaam (str): achternaam van het lid
         mailadres (str): mailadres van het lid
         foutboodschap (str): boodschap bij het lid als het foutief is. Nullable
     """
 
-    id = models.CharField(primary_key=True, max_length=50, default=volgende_deelnemer_id)
+    id = models.CharField(primary_key=True, max_length=255, default=volgende_deelnemer_id)
     voornaam = models.CharField(null=False)
     achternaam = models.CharField(null=False)
     mailadres = models.CharField(null=False)
