@@ -26,6 +26,9 @@ DEBUG=true
 
 DJANGO_KEY=
 
+# kommagescheiden hostnamen, lokaal: localhost,127.0.0.1
+ALLOWED_HOSTS=
+
 # STATIC_ROOT en CSRF_TRUSTED_ORIGINS laat je lokaal weg.
 # Op de servers (acceptatie en productie) vult Ansible ze in.
 
