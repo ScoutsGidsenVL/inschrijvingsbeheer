@@ -8,7 +8,10 @@ De views in deze module worden gebruikt voor het pad `/deelnemers/*`
     **deelnemers_inschrijvingen:** View voor inshrijvingen van een deelnemer
 """
 
-from django.db.models import Q
+from urllib.parse import urlencode
+
+from django.db.models import F, Q
+from django.db.models.lookups import IsNull
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
@@ -17,6 +20,8 @@ from inschrijfbeheer.utils.auth import check_rollen
 from inschrijfbeheer.utils.paginering import pagineer
 from inschrijfbeheer.utils.soap import haal_lidgegevens
 
+LEDENZOEKER_URL = "https://intranet.scoutsengidsenvlaanderen.be/bin/ledenzoeker_GA/ledenzoeker.asp"
+
 
 @check_rollen
 def deelnemers_lijst(request: HttpRequest) -> HttpResponse:
@@ -24,6 +29,8 @@ def deelnemers_lijst(request: HttpRequest) -> HttpResponse:
     Deze view wordt gebruikt voor `/deelnemers/`.
 
     De pagina laat filtering toe op basis van het id, de naam of het mailadres van de deelnemer.
+    Deelnemers met een foutboodschap (niet gevonden in de GA) staan bovenaan,
+    daarna volgt de sortering op achternaam en voornaam.
 
     Args:
         request (HttpRequest): HTTP request voor de pagina
@@ -38,6 +45,9 @@ def deelnemers_lijst(request: HttpRequest) -> HttpResponse:
         | Q(achternaam__icontains=zoekterm)
         | Q(mailadres__icontains=zoekterm)
     ).distinct()
+    deelnemers = deelnemers.order_by(
+        IsNull(F("foutboodschap"), True), "achternaam", "voornaam", "id"
+    )
 
     deelnemers, querystring = pagineer(request, deelnemers)
 
@@ -65,11 +75,20 @@ def deelnemers_detail(request: HttpRequest, id: str) -> HttpResponse:
     """
     deelnemer = Deelnemer.objects.get(id=id)
     if deelnemer.foutboodschap is not None:
+        # Links om de deelnemer manueel terug te vinden: de inschrijvingen in Weez
+        # en een zoekopdracht op naam in de ledenzoeker
+        inschrijvingen = Inschrijving.objects.filter(lid=deelnemer, is_weez=True).select_related(
+            "evenement"
+        )
+        naam = f"{deelnemer.voornaam}{deelnemer.achternaam}"
+        ledenzoeker_url = f"{LEDENZOEKER_URL}?{urlencode({'Naam': naam})}"
         return render(
             request,
             "deelnemers/deelnemers_ongeldig.html",
             {
                 "deelnemer": deelnemer,
+                "inschrijvingen": inschrijvingen,
+                "ledenzoeker_url": ledenzoeker_url,
             },
         )
 

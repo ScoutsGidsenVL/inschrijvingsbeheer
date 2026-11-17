@@ -1,5 +1,21 @@
 {% extends "deelnemers/deelnemers_base.html" %}
 
 {% block deelnemers_content %}
-<p>Deze deelnemer is ongeldig</p>
+<p>Deze deelnemer is niet gevonden in de groepsadministratie.</p>
+
+<h2>Opzoeken</h2>
+<ul>
+    <li><a href="{{ ledenzoeker_url }}" target="_blank" rel="noopener">Zoek {{ deelnemer }} in de ledenzoeker</a></li>
+</ul>
+
+<h2>Inschrijvingen in Weezevent</h2>
+<ul>
+    {% for inschrijving in inschrijvingen %}
+        <li>
+            <a href="https://admin.weezevent.com/ticket/O464400/E{{ inschrijving.evenement.id }}/manager/attendees/{{ inschrijving.id }}" target="_blank" rel="noopener">{{ inschrijving.evenement }}</a>
+        </li>
+    {% empty %}
+        <li>Geen inschrijvingen in Weezevent gevonden.</li>
+    {% endfor %}
+</ul>
 {% endblock deelnemers_content %}
