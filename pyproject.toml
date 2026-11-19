@@ -16,8 +16,8 @@ dependencies = [
   # crypto: jwt.PyJWK met RSA-sleutels in config/oidc.py
   "PyJWT[crypto]>=2.15.0,<3",
   "pypdf>=6.21.4,<7",
-  "python-dotenv>=1.2.2,<2",
-  "reportlab>=5.0.1,<6",
+  "python-dotenv>=1.2.4,<2",
+  "reportlab>=5.1.0,<6",
   "requests>=2.34.2,<3",
   "urllib3>=2.8.0,<3",
   "zeep>=4.3.3,<5",
@@ -26,7 +26,7 @@ dependencies = [
 [dependency-groups]
 # tools voor ontwikkeling en CI; Ansible installeert met --no-dev
 dev = [
-  "ruff>=0.6.9,<0.7",
+  "ruff>=0.17.5,<0.18",
 ]
 
 [tool.uv]
