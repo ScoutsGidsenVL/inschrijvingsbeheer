@@ -2,20 +2,25 @@
 
 ## Opzet
 
-Alle dependencies zijn te vinden in [requirements.txt](../requirements.txt). Het opzetten van de virtuele omgeving gebeurt aan de hand van de volgende commandos op een Linux systeem.
+### Lokale installatie
+
+De directe dependencies staan in `dependencies` in [pyproject.toml](../pyproject.toml), de exacte versies in [uv.lock](../uv.lock). Installeer [uv](https://docs.astral.sh/uv/getting-started/installation/). Python hoef je niet zelf te installeren: uv haalt de juiste versie op.
 
 ```shell
-# opzetten van de virtuele omgeving
-> python3 -m venv .venv
-> source .venv/bin/activate
-> pip install -r requirements.txt
+# virtuele omgeving (.venv) aanmaken en exact uv.lock installeren
+> uv sync --python 3.13
+
+# na een wijziging aan dependencies in pyproject.toml: uv.lock bijwerken en mee committen
+> uv lock
 
 # opzetten databank
 > cd src
-> python manage.py makemigrations
-> python manage.py migrate
-> python manage.py migrate procrastinate
+> uv run python manage.py makemigrations
+> uv run python manage.py migrate
+> uv run python manage.py migrate procrastinate
 ```
+
+Met `uv run` draait een commando in de virtuele omgeving van het project, zonder die eerst te activeren.
 
 [settings.py](../src/inschrijfbeheer/settings.py) verwacht een aantal environment variables, dus een bestand met naam `.env` moet aangemaakt worden in de root van het project.
 Dit bestand moet de volgende attributen bevatten.
@@ -90,8 +95,8 @@ Verder is er een taak die ieder uur een synchronisatie uitvoert van beide databr
 
 ```shell
 > cd src
-> python manage.py sync <weez|integreat> [--dry-run] [--alles] [--terugblik-dagen TERUG_BLIKDAGEN]
-> python manage.py sync --help # meer info
+> uv run python manage.py sync <weez|integreat> [--dry-run] [--alles] [--terugblik-dagen TERUG_BLIKDAGEN]
+> uv run python manage.py sync --help # meer info
 ```
 
 > [!WARNING]
@@ -103,7 +108,7 @@ Om de applicatie uit te voeren moet men het onderstaande command uitvoeren
 
 ```shell
 > cd src/
-> python manage.py runserver 2197
+> uv run python manage.py runserver 2197
 ```
 
 Dit opent de applicatie op [http://localhost:2197](http://localhost:2197)
@@ -119,7 +124,7 @@ Voor een worker op te starten die deze taken uitvoert, kan het volgende commando
 
 ```sh
 > cd src/
-> python manage.py procrastinate worker
+> uv run python manage.py procrastinate worker
 ```
 
 ## Structuur
