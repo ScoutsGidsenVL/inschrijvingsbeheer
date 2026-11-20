@@ -9,7 +9,7 @@ dependencies = [
   "gunicorn>=26,<27",
   "mozilla-django-oidc>=5.0.2,<6",
   # backend "mssql" voor de Integreat-databank
-  "mssql-django>=1.8.0,<2",
+  "mssql-django>=2.0.0,<3",
   "procrastinate[django]>=3.11.0,<4",
   # PostgreSQL-driver voor de backend config.postgresql13_eol
   "psycopg[binary]>=3.3.5,<4",
