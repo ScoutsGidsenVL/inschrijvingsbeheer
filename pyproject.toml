@@ -24,14 +24,21 @@ dependencies = [
 ]
 
 [dependency-groups]
-# tools voor ontwikkeling en CI; Ansible installeert met --no-dev
+# tools voor ontwikkeling en CI
 dev = [
+  "pytest>=8.3",
+  "pytest-django>=4.10",
   "ruff>=0.17.5,<0.18",
 ]
 
 [tool.uv]
 # applicatie, geen pakket: uv bouwt of installeert het project zelf niet
 package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+DJANGO_SETTINGS_MODULE = "config.settings"
 
 [tool.ruff]
 line-length = 100

@@ -12,22 +12,13 @@ permissions:
   contents: write
 
 jobs:
-  uv-lock:
-    runs-on: ubuntu-latest
+  controle:
     permissions:
       contents: read
-    steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-      - name: uv.lock komt overeen met pyproject.toml
-        run: |
-          if ! uv lock --check; then
-            echo "::error::uv.lock is niet bijgewerkt. Open een pull request of draai \`uv lock\`."
-            exit 1
-          fi
+    uses: ./.github/workflows/controle.yaml
 
   Deploy:
-    needs: uv-lock
+    needs: controle
     runs-on: ubuntu-22.04
 
     steps:

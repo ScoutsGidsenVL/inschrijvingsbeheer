@@ -1,0 +1,38 @@
+name: Controle
+
+# Geen concurrency: een aangeroepen workflow deelt github.workflow met de aanroeper
+# en zou zichzelf blokkeren.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  controle:
+    runs-on: ubuntu-latest
+    env:
+      # enkel dummywaarden, geen secrets
+      DJANGO_KEY: dummy
+      ALLOWED_HOSTS: localhost
+      # models/inschrijfbeheer_models.py zet deze waarde bij import om naar int
+      INTEGREAT_TERUGBLIK_DAGEN: "14"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          # de Python-versie van de server
+          python-version: "3.13"
+      - name: uv.lock komt overeen met pyproject.toml
+        run: |
+          if ! uv lock --check; then
+            echo "::error::uv.lock is niet bijgewerkt. Draai \`uv lock\` en commit uv.lock."
+            exit 1
+          fi
+      - name: Installeren
+        run: uv sync --locked
+      - name: Django check
+        working-directory: src
+        run: uv run --no-sync python manage.py check
+      - name: Tests
+        run: uv run --no-sync pytest
