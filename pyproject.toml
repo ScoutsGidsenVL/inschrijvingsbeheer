@@ -12,7 +12,7 @@ dependencies = [
   "mssql-django>=1.8.0,<2",
   "procrastinate[django]>=3.11.0,<4",
   # PostgreSQL-driver voor de backend config.postgresql13_eol
-  "psycopg[binary]>=3.3.5,<4",
+  "psycopg[binary]>=3.3.9,<4",
   # crypto: jwt.PyJWK met RSA-sleutels in config/oidc.py
   "PyJWT[crypto]>=2.15.0,<3",
   "pypdf>=6.21.4,<7",
