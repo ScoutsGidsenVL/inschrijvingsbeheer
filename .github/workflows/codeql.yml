@@ -1,0 +1,41 @@
+name: CodeQL
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # wekelijks, zodat nieuwe CodeQL-regels ook ongewijzigde code controleren
+    - cron: "31 21 * * SUN"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # actions: de workflowbestanden zelf (o.a. script-injectie)
+        # javascript-typescript: src/static/scripts
+        language: ["actions", "javascript-typescript", "python"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+      # geen build-stap: geen van de talen wordt gecompileerd
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
