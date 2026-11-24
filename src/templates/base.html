@@ -16,28 +16,41 @@
         </div>
     {% endif %}
     <header class="hoofding">
-        <h1>Inschrijvingsbeheer</h1>
+        <h1><a href="/">Inschrijvingsbeheer</a></h1>
     </header>
     <div class="layout">
-        <nav class="zijbalk">
-            <ul>
-                <li><a href="/evenementen">Evenementen</a></li>
-                <li><a href="/deelnemers">Deelnemers</a></li>
-                <li><a href="/logs">Logs</a></li>
-                <li><a href="/docs">Technische documentatie</a></li>
-                <li><a href="{% url "handleiding_overzicht" %}">Handleidingen</a></li>
-            </ul>
-        </nav>
+        {% comment %}
+            Enkel voor wie aangemeld is: de OIDC-backend weigert de aanmelding voor wie geen
+            personeel is. Pagina's zonder toegang (geen_toegang, 404 voor anoniemen) tonen
+            zo geen links die toch niet werken.
+        {% endcomment %}
+        {% if user.is_authenticated %}
+            <nav class="zijbalk">
+                <ul>
+                    <li><a href="/evenementen">Evenementen</a></li>
+                    <li><a href="/deelnemers">Deelnemers</a></li>
+                    <li><a href="/logs">Logs</a></li>
+                    <li><a href="/docs">Technische documentatie</a></li>
+                    <li><a href="{% url "handleiding_overzicht" %}">Handleidingen</a></li>
+                </ul>
+            </nav>
+        {% endif %}
         <main class="inhoud">
             {% block content %}{% endblock content %}
         </main>
     </div>
-    <div id="sessie-melding" class="melding-popup" role="alert" hidden>
-        <p class="melding fout">Je bent niet meer aangemeld. Wat je op deze pagina invulde, blijft staan.</p>
-        <button type="button" id="sessie-aanmelden" class="sessie-aanmelden">Opnieuw aanmelden</button>
-    </div>
-    <script src="{% static "scripts/sessie.js" %}"
-            data-status-url="{% url "sessie_status" %}"
-            data-verleng-url="{% url "sessie_verlengen" %}"
-            data-aanmeld-url="{% url "oidc_authentication_init" %}?next={% url "sessie_aangemeld" %}"></script>
+    {% comment %}
+        Sessiebeheer enkel voor wie aangemeld is. Anders toont sessie.js meteen de melding
+        dat je niet meer aangemeld bent.
+    {% endcomment %}
+    {% if user.is_authenticated %}
+        <div id="sessie-melding" class="melding-popup" role="alert" hidden>
+            <p class="melding fout">Je bent niet meer aangemeld. Wat je op deze pagina invulde, blijft staan.</p>
+            <button type="button" id="sessie-aanmelden" class="sessie-aanmelden">Opnieuw aanmelden</button>
+        </div>
+        <script src="{% static "scripts/sessie.js" %}"
+                data-status-url="{% url "sessie_status" %}"
+                data-verleng-url="{% url "sessie_verlengen" %}"
+                data-aanmeld-url="{% url "oidc_authentication_init" %}?next={% url "sessie_aangemeld" %}"></script>
+    {% endif %}
 </body>

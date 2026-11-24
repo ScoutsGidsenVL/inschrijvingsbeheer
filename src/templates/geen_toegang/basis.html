@@ -1,14 +1,8 @@
-{% load static %}
+{% extends "base.html" %}
 
-<head>
-    <title>Inschrijvingsbeheer</title>
-    <link rel="stylesheet" href="{% static "styles/base.css" %}">
-</head>
-<body>
-    <header class="hoofding">
-        <h1>Inschrijvingsbeheer</h1>
-    </header>
-    <main class="inhoud">
-        {% block inhoud %}{% endblock %}
-    </main>
-</body>
+{% comment %}
+    Wie hier landt, is niet aangemeld. base.html toont dan zelf geen zijbalk en geen sessiebeheer.
+{% endcomment %}
+{% block content %}
+    {% block inhoud %}{% endblock inhoud %}
+{% endblock content %}

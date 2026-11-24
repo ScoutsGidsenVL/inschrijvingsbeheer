@@ -1,5 +1,8 @@
 {% load static %}
-
+{% comment %}
+    Bewust niet op base.html gebaseerd: dit venster sluit zichzelf meteen. base.html zou
+    zijbalk en sessie.js laden en Django-meldingen opgebruiken die voor de hoofdtab bedoeld zijn.
+{% endcomment %}
 <head>
     <title>Inschrijvingsbeheer</title>
     <link rel="stylesheet" href="{% static "styles/base.css" %}">
