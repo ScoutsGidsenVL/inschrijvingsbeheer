@@ -56,12 +56,23 @@ def is_personeel(access_token: str | None) -> bool:
     )
     response.raise_for_status()
 
-    for groep in response.json().get("groepen", []):
+    groepen = response.json().get("groepen", [])
+    for groep in groepen:
         if groep.get("id") != PERSONEEL_GROEP:
             continue
         if PERSONEEL_VERANTWOORDELIJKHEID in groep.get("verantwoordelijkheden", []):
             return True
 
+    # Toont wat Groepsadmin teruggaf, om een onterechte weigering te kunnen verklaren
+    personeel_groep = next((g for g in groepen if g.get("id") == PERSONEEL_GROEP), None)
+    logger.warning(
+        "Geen %s/%s in Groepsadmin. Groepen: %s. Verantwoordelijkheden in %s: %r",
+        PERSONEEL_GROEP,
+        PERSONEEL_VERANTWOORDELIJKHEID,
+        ", ".join(str(g.get("id")) for g in groepen) or "geen",
+        PERSONEEL_GROEP,
+        personeel_groep.get("verantwoordelijkheden") if personeel_groep else "groep ontbreekt",
+    )
     return False
 
 
